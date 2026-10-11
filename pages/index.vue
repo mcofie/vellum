@@ -130,8 +130,8 @@ h1 {
 
 @media (max-height: 700px) and (min-width: 651px) {
   .introduction {
-    margin-top: 22px;
-    margin-bottom: 20px;
+    margin-top: 18px;
+    margin-bottom: 14px;
   }
 
   h1 {
@@ -139,8 +139,13 @@ h1 {
   }
 
   .description {
-    margin-top: 14px;
-    line-height: 1.55;
+    margin-top: 12px;
+    font-size: 14px;
+    line-height: 1.48;
+  }
+
+  .portrait-family img {
+    max-height: calc(100svh - 300px);
   }
 }
 
