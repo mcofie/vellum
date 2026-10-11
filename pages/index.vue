@@ -2,9 +2,9 @@
   <main class="vellum-page">
     <section class="introduction" aria-labelledby="page-title">
       <h1 id="page-title">Vellum</h1>
-      <p class="eyebrow">A new chapter in legacy</p>
+      <p class="eyebrow">Wills and digital legacy</p>
       <p class="description">
-        Over the past decade, the financial profiles of urban Africans shifted dramatically. Modern founders, remote engineers, and diaspora professionals now accumulate wealth in liquid non-custodial crypto, multi-currency fintech wallets, offshore cap tables, and private equity stakes. Yet estate planning in West Africa remains tethered to 19th-century probate routines: handwritten wills stored in metal cabinets, unverified witnesses, and bureaucratic court registries.
+        Make a will. Protect your digital assets. Leave clear instructions for the people you love. Keep your wishes and important details together in one thoughtful plan.
       </p>
     </section>
 
@@ -19,12 +19,20 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Vellum — A new chapter in legacy',
+  title: 'Vellum | Wills & Digital Legacy',
   meta: [
     {
       name: 'description',
-      content: 'A more considered way to protect the wealth and people that matter.'
-    }
+      content: 'Create your will, protect your digital assets, and leave clear instructions for the people you love.'
+    },
+    { property: 'og:title', content: 'Vellum | Wills & Digital Legacy' },
+    {
+      property: 'og:description',
+      content: 'Create your will, protect your digital assets, and leave clear instructions for the people you love.'
+    },
+    { property: 'og:type', content: 'website' },
+    { name: 'twitter:card', content: 'summary' },
+    { name: 'theme-color', content: '#f8f7f3' }
   ],
   link: [
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -39,6 +47,7 @@ useHead({
 
 <style scoped>
 .vellum-page {
+  position: relative;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -49,7 +58,7 @@ useHead({
 
 .introduction {
   width: min(740px, calc(100% - 48px));
-  margin: clamp(30px, 7.8svh, 86px) auto clamp(28px, 5svh, 45px);
+  margin: auto auto clamp(24px, 5svh, 45px);
   text-align: center;
 }
 
@@ -71,11 +80,12 @@ h1 {
 }
 
 .description {
-  max-width: 690px;
+  max-width: 650px;
   margin: 25px auto 0;
   color: #465564;
   font-size: clamp(14px, 1.2vw, 15px);
   line-height: 1.75;
+  text-wrap: pretty;
 }
 
 .portrait-family {
@@ -105,7 +115,7 @@ h1 {
 @media (max-width: 650px) {
   .introduction {
     width: min(100% - 36px, 520px);
-    margin: clamp(28px, 6svh, 55px) auto clamp(22px, 4svh, 35px);
+    margin: auto auto clamp(20px, 5svh, 35px);
   }
 
   .eyebrow {
@@ -115,11 +125,11 @@ h1 {
   .description {
     margin-top: 20px;
     font-size: 14px;
-    line-height: 1.72;
+    line-height: 1.65;
   }
 
   .portrait-family {
-    padding: 0 12px;
+    padding: 0 12px max(0px, env(safe-area-inset-bottom));
   }
 
   .portrait-family img {
@@ -128,9 +138,24 @@ h1 {
   }
 }
 
+@media (max-width: 380px) {
+  .introduction {
+    width: calc(100% - 32px);
+  }
+
+  h1 {
+    font-size: 44px;
+  }
+
+  .description {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+}
+
 @media (max-height: 700px) and (min-width: 651px) {
   .introduction {
-    margin-top: 18px;
+    margin-top: clamp(40px, 9svh, 64px);
     margin-bottom: 14px;
   }
 
@@ -155,12 +180,17 @@ h1 {
   }
 
   .portrait-family img {
-    animation: arrive 800ms ease-out both;
+    animation: arrive 800ms ease-out both, family-float 7s ease-in-out 800ms infinite;
   }
 }
 
 @keyframes arrive {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes family-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
 }
 </style>
