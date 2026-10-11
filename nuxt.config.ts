@@ -11,6 +11,11 @@ export default defineNuxtConfig({
     discordWebhookUrl: process.env.NUXT_DISCORD_WEBHOOK_URL || ''
   },
   app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
+      ]
+    },
     pageTransition: { name: 'page', mode: 'out-in' }
   }
 })
