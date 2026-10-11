@@ -113,23 +113,42 @@ async function submitRequest() {
   }
 }
 
+const requestUrl = useRequestURL()
+const canonicalUrl = new URL('/', requestUrl).href
+const socialImageUrl = new URL('/og-image.jpg', requestUrl).href
+
 useHead({
-  title: 'Vellum | Wills & Digital Legacy',
+  title: 'Vellum | Wills and Digital Legacy',
   meta: [
     {
       name: 'description',
       content: 'Create your will, protect your digital assets, and leave clear instructions for the people you love.'
     },
-    { property: 'og:title', content: 'Vellum | Wills & Digital Legacy' },
+    { property: 'og:title', content: 'Vellum | Wills and Digital Legacy' },
     {
       property: 'og:description',
       content: 'Create your will, protect your digital assets, and leave clear instructions for the people you love.'
     },
+    { property: 'og:site_name', content: 'Vellum' },
     { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary' },
+    { property: 'og:url', content: canonicalUrl },
+    { property: 'og:image', content: socialImageUrl },
+    { property: 'og:image:type', content: 'image/jpeg' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { property: 'og:image:alt', content: 'The Vellum wordmark beside a family together, with the message: Make a will. Protect what matters.' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: 'Vellum | Wills and Digital Legacy' },
+    {
+      name: 'twitter:description',
+      content: 'Create your will, protect your digital assets, and leave clear instructions for the people you love.'
+    },
+    { name: 'twitter:image', content: socialImageUrl },
+    { name: 'twitter:image:alt', content: 'The Vellum wordmark beside a family together, with the message: Make a will. Protect what matters.' },
     { name: 'theme-color', content: '#f8f7f3' }
   ],
   link: [
+    { rel: 'canonical', href: canonicalUrl },
     { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
     {
