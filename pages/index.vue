@@ -105,6 +105,7 @@ async function submitRequest() {
     request.email = ''
     request.message = ''
     request.website = ''
+    window.setTimeout(closeDialog, 1200)
   } catch {
     status.value = 'Your request could not be sent. Please try again.'
   } finally {
