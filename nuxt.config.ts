@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt'
   ],
+  runtimeConfig: {
+    discordWebhookUrl: process.env.NUXT_DISCORD_WEBHOOK_URL || ''
+  },
   app: {
     pageTransition: { name: 'page', mode: 'out-in' }
   }

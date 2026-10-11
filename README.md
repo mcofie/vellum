@@ -38,6 +38,10 @@ yarn dev
 bun run dev
 ```
 
+## Contact requests
+
+Set `NUXT_DISCORD_WEBHOOK_URL` in `.env` for local development and as a private runtime environment variable in production. Use `.env.example` as the local template; never expose the webhook URL in client code.
+
 ## Production
 
 Build the application for production:
