@@ -2,7 +2,7 @@ export type Illustration = 'partner' | 'children' | 'pets' | 'home' | 'matters' 
 
 export type ChoiceKey = 'partner' | 'children' | 'pets' | 'home'
 export type Choice = 'yes' | 'no'
-export type MatterKey = 'children' | 'belongings' | 'pets' | 'funeral' | 'digital'
+export type MatterKey = 'children' | 'belongings' | 'money' | 'pets' | 'funeral' | 'digital'
 
 export interface ChoiceQuestion {
   key: ChoiceKey
@@ -26,7 +26,7 @@ export const choiceQuestions: ChoiceQuestion[] = [
     illustration: 'partner',
     options: [
       { value: 'no', label: 'No', hint: 'Including separated, divorced or widowed' },
-      { value: 'yes', label: 'Yes', hint: 'Including engaged or living with a partner' }
+      { value: 'yes', label: 'Yes', hint: 'Married under any rites, engaged, or living together' }
     ]
   },
   {
@@ -49,21 +49,22 @@ export const choiceQuestions: ChoiceQuestion[] = [
   },
   {
     key: 'home',
-    title: 'Do you own a home or land?',
+    title: 'Do you own a house or land?',
     illustration: 'home',
     options: [
       { value: 'no', label: 'No', hint: 'That’s okay — you don’t need property to make a will' },
-      { value: 'yes', label: 'Yes', hint: 'Including shared ownership or with a mortgage' }
+      { value: 'yes', label: 'Yes', hint: 'Including family land, or a house you’re still building' }
     ]
   }
 ]
 
-export const matterOptions: { value: MatterKey, label: string, reason: string, requires?: ChoiceKey }[] = [
-  { value: 'children', label: 'Who looks after my children', reason: 'who looks after your children', requires: 'children' },
-  { value: 'belongings', label: 'Who gets my things', reason: 'who receives your belongings — even the small, sentimental ones' },
-  { value: 'pets', label: 'Who cares for my pets', reason: 'who takes care of your pets', requires: 'pets' },
-  { value: 'funeral', label: 'My funeral wishes', reason: 'how you’d like to be remembered' },
-  { value: 'digital', label: 'My online accounts and photos', reason: 'what happens to your online accounts and photos' }
+export const matterOptions: { value: MatterKey, label: string, requires?: ChoiceKey }[] = [
+  { value: 'children', label: 'Who looks after my children', requires: 'children' },
+  { value: 'belongings', label: 'Who gets my things' },
+  { value: 'money', label: 'My savings and mobile money' },
+  { value: 'pets', label: 'Who cares for my pets', requires: 'pets' },
+  { value: 'funeral', label: 'My funeral wishes' },
+  { value: 'digital', label: 'My online accounts and photos' }
 ]
 
 const choices: readonly unknown[] = ['yes', 'no']
@@ -94,23 +95,32 @@ export interface Stake {
   with: string
 }
 
-// Ordered by how much each one matters to the people left behind; the summary shows the first few that apply.
+// Written for Ghana's intestacy rules. Ordered by how much each one matters to the
+// people left behind; the summary shows the first few that apply.
 const stakes: { applies: (answers: QuizAnswers) => boolean, stake: Stake }[] = [
   {
     applies: (answers) => answers.children === 'yes',
-    stake: { without: 'A court could decide who raises your children.', with: 'You choose the guardian you trust.' }
+    stake: { without: 'Your family or a court may have to decide who raises your children.', with: 'You name the guardian you trust.' }
   },
   {
     applies: (answers) => answers.partner === 'yes',
-    stake: { without: 'Your partner may not inherit automatically — especially if you’re not married.', with: 'They’re protected, in black and white.' }
+    stake: { without: 'Even a spouse must share what you leave with your parents and wider family — and a partner you haven’t married may get nothing.', with: 'You decide exactly what your partner receives.' }
   },
   {
     applies: (answers) => answers.home === 'yes',
-    stake: { without: 'Your home can be tied up for months, or shared out in ways you’d never choose.', with: 'You decide exactly who it goes to.' }
+    stake: { without: 'Family houses and land are a common source of disputes, and widows and children can end up pushed out.', with: 'You decide who it goes to, in writing.' }
+  },
+  {
+    applies: (answers) => answers.matters.includes('money'),
+    stake: { without: 'Bank and mobile money accounts can stay locked until the court grants letters of administration, which can take months.', with: 'Your executor knows what you have and who it’s for.' }
   },
   {
     applies: (answers) => answers.pets === 'yes',
     stake: { without: 'No one is named to take your pets in.', with: 'You pick their next loving home.' }
+  },
+  {
+    applies: (answers) => answers.matters.includes('funeral'),
+    stake: { without: 'Family can end up disagreeing over your funeral at the hardest time.', with: 'Everyone knows exactly what you’d want.' }
   },
   {
     applies: (answers) => answers.matters.includes('digital'),
@@ -118,11 +128,7 @@ const stakes: { applies: (answers: QuizAnswers) => boolean, stake: Stake }[] = [
   },
   {
     applies: (answers) => answers.matters.includes('belongings'),
-    stake: { without: 'Family can end up disagreeing over what you would have wanted.', with: 'Your wishes are clear, so there’s nothing to argue about.' }
-  },
-  {
-    applies: (answers) => answers.matters.includes('funeral'),
-    stake: { without: 'Loved ones are left guessing at the hardest time.', with: 'They know exactly what you’d want.' }
+    stake: { without: 'Relatives can end up arguing over what you would have wanted.', with: 'Your wishes are clear, so there’s nothing to argue about.' }
   }
 ]
 
@@ -135,4 +141,18 @@ export function summaryHeadline(answers: QuizAnswers) {
   if (answers.partner === 'yes') return 'Your partner shouldn’t have to guess.'
   if (answers.pets === 'yes') return 'Someone should know who’ll look after them.'
   return 'Your wishes deserve to be written down.'
+}
+
+export const funnelSteps = ['partner', 'children', 'pets', 'home', 'matters', 'summary', 'contact', 'done'] as const
+export type FunnelStep = typeof funnelSteps[number]
+
+// Accepts Ghanaian local numbers (024 123 4567) and international numbers (+233 24 123 4567),
+// and returns them in international form, or null when the number cannot be valid.
+export function normalizePhone(input: unknown) {
+  if (typeof input !== 'string') return null
+  const digits = input.trim().replace(/[\s\-().]/g, '')
+  if (/^0\d{9}$/.test(digits)) return `+233${digits.slice(1)}`
+  if (/^233\d{9}$/.test(digits)) return `+${digits}`
+  if (/^\+\d{8,15}$/.test(digits)) return digits
+  return null
 }

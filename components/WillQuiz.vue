@@ -60,7 +60,7 @@
           <p class="eyebrow">Here’s the honest truth</p>
           <h2 id="dialog-title" ref="heading" tabindex="-1">{{ summaryHeadline(completeAnswers) }}</h2>
           <p class="quiz-copy lead">
-            Without a will, the law decides who gets what — and who looks after whom. It follows a one-size-fits-all formula that doesn’t know you, or the people you love.
+            Without a will, Ghana’s intestacy law decides who gets what using a fixed formula — with shares set aside for your parents and wider family. Your loved ones must also apply to court before they can manage anything you leave behind.
           </p>
 
           <ul class="stakes">
@@ -94,8 +94,16 @@
             <input v-model="contact.name" autocomplete="name" maxlength="80" required />
           </label>
           <label>
-            Email
-            <input v-model="contact.email" type="email" autocomplete="email" inputmode="email" maxlength="254" required />
+            Phone number
+            <input v-model="contact.phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="024 123 4567" required />
+          </label>
+          <label class="check">
+            <input v-model="contact.whatsapp" type="checkbox" />
+            <span>You can reach me on WhatsApp</span>
+          </label>
+          <label>
+            <span>Email <span class="optional">Optional</span></span>
+            <input v-model="contact.email" type="email" autocomplete="email" inputmode="email" maxlength="254" />
           </label>
           <label>
             <span>Anything else we should know? <span class="optional">Optional</span></span>
@@ -105,7 +113,7 @@
             Website
             <input v-model="contact.website" tabindex="-1" autocomplete="off" />
           </label>
-          <p class="form-note">Your answers, name and email are shared privately with the Vellum team so we can help you.</p>
+          <p class="form-note">Your answers and contact details are shared privately with the Vellum team so we can help you.</p>
           <p v-if="status" class="form-status" role="alert">{{ status }}</p>
           <button class="button-primary" type="submit" :disabled="submitting">
             {{ submitting ? 'Sending…' : 'Send my answers' }}
@@ -116,7 +124,7 @@
           <p class="eyebrow">You’ve taken the first step</p>
           <h2 id="dialog-title" ref="heading" tabindex="-1">Thank you, {{ firstName }}.</h2>
           <p class="quiz-copy">
-            We’ll be in touch at <strong>{{ contact.email }}</strong> with what to do next. Most people put this off for years — you didn’t.
+            We’ll {{ contact.whatsapp ? 'message you on WhatsApp' : 'call you' }} at <strong>{{ contact.phone }}</strong> with what to do next. Most people put this off for years — you didn’t.
           </p>
           <div class="quiz-actions">
             <button class="button-primary" type="button" @click="$emit('close')">Done</button>
@@ -130,6 +138,8 @@
 <script setup lang="ts">
 import {
   choiceQuestions,
+  funnelSteps,
+  normalizePhone,
   matterOptions,
   parseQuizAnswers,
   stakesFor,
@@ -152,7 +162,7 @@ const submitting = ref(false)
 const advancing = ref(false)
 const status = ref('')
 const answers = reactive<{ partner?: Choice, children?: Choice, pets?: Choice, home?: Choice, matters: MatterKey[] }>({ matters: [] })
-const contact = reactive({ name: '', email: '', message: '', website: '' })
+const contact = reactive({ name: '', phone: '', whatsapp: true, email: '', message: '', website: '' })
 
 const step = computed(() => steps[stepIndex.value]!)
 const question = computed(() => choiceQuestions.find(({ key }) => key === step.value))
@@ -204,6 +214,12 @@ function back() {
 
 async function submit() {
   haptic('impact')
+  const phone = normalizePhone(contact.phone)
+  if (!phone) {
+    haptic('error')
+    status.value = 'Enter a valid phone number, like 024 123 4567.'
+    return
+  }
   submitting.value = true
   status.value = ''
 
@@ -213,6 +229,7 @@ async function submit() {
       body: { ...contact, answers }
     })
     haptic('success')
+    clearSavedProgress()
     next()
   } catch (error: any) {
     haptic('error')
@@ -226,7 +243,54 @@ function reset() {
   stepIndex.value = 0
   status.value = ''
   Object.assign(answers, { partner: undefined, children: undefined, pets: undefined, home: undefined, matters: [] })
-  Object.assign(contact, { name: '', email: '', message: '', website: '' })
+  Object.assign(contact, { name: '', phone: '', whatsapp: true, email: '', message: '', website: '' })
+  clearSavedProgress()
+}
+
+// Progress lives in sessionStorage so an accidental close or refresh doesn't lose it.
+// It is cleared once the answers are sent, and the browser drops it when the tab closes.
+const progressKey = 'vellum:quiz'
+
+watch(() => contact.phone, () => { status.value = '' })
+
+function clearSavedProgress() {
+  try { sessionStorage.removeItem(progressKey) } catch {}
+}
+
+onMounted(() => {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(progressKey) || 'null')
+    const savedStep = steps.indexOf(saved?.step)
+    if (savedStep > 0 && steps[savedStep] !== 'done') {
+      Object.assign(answers, saved.answers)
+      Object.assign(contact, saved.contact, { website: '' })
+      stepIndex.value = savedStep
+    }
+  } catch {}
+
+  watch([stepIndex, answers, contact], () => {
+    if (step.value === 'done') return
+    try {
+      sessionStorage.setItem(progressKey, JSON.stringify({ step: step.value, answers, contact: { ...contact, website: '' } }))
+    } catch {}
+  }, { deep: true })
+
+  watch(step, trackStep, { immediate: true })
+})
+
+// Anonymous funnel counts so we can see where people stop. Each step counts once per session.
+function trackStep(name: Step) {
+  if (!(funnelSteps as readonly string[]).includes(name)) return
+  try {
+    const seen = new Set<string>(JSON.parse(sessionStorage.getItem('vellum:funnel') || '[]'))
+    if (seen.has(name)) return
+    seen.add(name)
+    sessionStorage.setItem('vellum:funnel', JSON.stringify([...seen]))
+  } catch {}
+  const payload = new Blob([JSON.stringify({ step: name })], { type: 'application/json' })
+  if (!navigator.sendBeacon?.('/api/quiz-event', payload)) {
+    fetch('/api/quiz-event', { method: 'POST', body: payload, keepalive: true }).catch(() => {})
+  }
 }
 
 watch(stepIndex, async () => {
@@ -614,6 +678,24 @@ defineExpose({ reset, isDone: computed(() => step.value === 'done') })
 .optional {
   color: #7a8692;
   font-weight: 400;
+}
+
+.request-form .check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -6px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.request-form .check input {
+  width: 20px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  accent-color: var(--brand);
+  box-shadow: none;
 }
 
 .request-form input,

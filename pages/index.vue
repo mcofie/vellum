@@ -17,10 +17,21 @@
     </section>
 
     <section class="portrait-family" aria-label="A family together">
-      <img
-        src="/vellum-family.png"
-        alt="A family of four together, represented as tactile felt characters"
-      />
+      <picture>
+        <source
+          type="image/webp"
+          srcset="/vellum-family-640.webp 640w, /vellum-family-960.webp 960w, /vellum-family-1280.webp 1280w, /vellum-family-1829.webp 1829w"
+          sizes="(min-width: 1500px) 1180px, 92vw"
+        />
+        <img
+          src="/vellum-family.png"
+          width="1829"
+          height="860"
+          fetchpriority="high"
+          decoding="async"
+          alt="A family of four together, represented as tactile felt characters"
+        />
+      </picture>
     </section>
 
     <dialog ref="dialog" class="request-dialog" :class="{ wide: dialogMode === 'quiz' }" aria-labelledby="dialog-title" @click="closeOnBackdrop">
@@ -74,6 +85,12 @@ function closeOnBackdrop(event: MouseEvent) {
   if (event.target === dialog.value) closeDialog()
 }
 
+useSheetDrag(dialog, {
+  // Only the quiz becomes a bottom sheet, and only at phone widths.
+  enabled: () => dialogMode.value === 'quiz' && window.matchMedia('(max-width: 520px)').matches,
+  onDismiss: () => dialog.value?.close()
+})
+
 const requestUrl = useRequestURL()
 const canonicalUrl = new URL('/', requestUrl).href
 const socialImageUrl = new URL('/og-image.jpg', requestUrl).href
@@ -106,7 +123,7 @@ useHead({
     },
     { name: 'twitter:image', content: socialImageUrl },
     { name: 'twitter:image:alt', content: 'The Vellum wordmark beside a family together, with the message: Make a will. Protect what matters.' },
-    { name: 'theme-color', content: '#f8f7f3' }
+    { name: 'theme-color', content: '#f6f5f1' }
   ],
   link: [
     { rel: 'canonical', href: canonicalUrl },
@@ -114,7 +131,7 @@ useHead({
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
     {
       rel: 'stylesheet',
-      href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Serif+Display&family=Mynerve&display=swap'
+      href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Mynerve&display=swap'
     }
   ]
 })
@@ -200,7 +217,7 @@ h1 {
 }
 
 .request-dialog[open] {
-  animation: dialog-in 420ms var(--ease-spring) both;
+  animation: dialog-in 420ms var(--ease-spring) backwards;
 }
 
 .request-dialog[open]::backdrop {

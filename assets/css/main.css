@@ -1,65 +1,48 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-:root {
-  --navy: #1A2B48;
-  --off-white: #F9F9F9;
-  --teal-accent: #008080;
-  --gold-accent: #D4AF37;
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-off-white text-navy font-sans antialiased overflow-x-hidden;
-  transition: background-color 0.5s ease;
+  margin: 0;
+  background: #f6f5f1;
+  color: #172d46;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* Slide Fade Transition */
-.slide-fade-enter-active {
-  transition: all 0.4s ease-out;
+img,
+svg,
+picture {
+  display: block;
+  max-width: 100%;
 }
 
-.slide-fade-leave-active {
-  transition: all 0.4s cubic-bezier(1, 0.5, 0.8, 1);
+button,
+input,
+textarea {
+  margin: 0;
+  font: inherit;
+  color: inherit;
 }
 
-.slide-fade-enter-from {
-  transform: translateX(40px);
-  opacity: 0;
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
-.slide-fade-leave-to {
-  transform: translateX(-40px);
-  opacity: 0;
-}
-
-/* Horizontal slide for steps */
-.page-enter-active,
-.page-leave-active {
-  transition: all 0.4s;
-}
-.page-enter-from {
-  opacity: 0;
-  transform: translateX(30px);
-}
-.page-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
-}
-
-/* Glassmorphism for cards */
-.glass-card {
-  @apply bg-white shadow-xl rounded-3xl border border-gray-100 backdrop-blur-sm bg-opacity-80;
-}
-
-/* Custom transitions */
-.fade-in {
-  animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+h1,
+h2,
+p {
+  overflow-wrap: break-word;
 }
 
 /* Vellum glass theme — shared by the landing page and its dialogs */
