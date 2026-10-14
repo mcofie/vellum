@@ -50,7 +50,7 @@
             </button>
           </div>
           <div class="quiz-actions">
-            <button class="button-primary" type="button" :disabled="!answers.matters.length" @click="next">
+            <button class="button-primary" type="button" :disabled="!answers.matters.length" @click="proceed">
               Continue
             </button>
           </div>
@@ -82,7 +82,7 @@
           </aside>
 
           <div class="quiz-actions sticky">
-            <button class="button-primary" type="button" @click="next">Put my wishes in writing</button>
+            <button class="button-primary" type="button" @click="proceed">Put my wishes in writing</button>
             <p>We’ll guide you through it, one simple step at a time.</p>
           </div>
         </template>
@@ -169,6 +169,7 @@ const availableMatters = computed(() =>
 
 function choose(key: ChoiceKey, value: Choice) {
   if (advancing.value) return
+  haptic('selection')
   answers[key] = value
   answers.matters = answers.matters.filter((matter) => availableMatters.value.some((option) => option.value === matter))
   // Let the selected state register before sliding to the next question.
@@ -180,6 +181,7 @@ function choose(key: ChoiceKey, value: Choice) {
 }
 
 function toggleMatter(value: MatterKey) {
+  haptic('selection')
   answers.matters = answers.matters.includes(value)
     ? answers.matters.filter((matter) => matter !== value)
     : [...answers.matters, value]
@@ -189,12 +191,19 @@ function next() {
   stepIndex.value = Math.min(stepIndex.value + 1, steps.length - 1)
 }
 
+function proceed() {
+  haptic('impact')
+  next()
+}
+
 function back() {
+  haptic('light')
   status.value = ''
   stepIndex.value = Math.max(stepIndex.value - 1, 0)
 }
 
 async function submit() {
+  haptic('impact')
   submitting.value = true
   status.value = ''
 
@@ -203,8 +212,10 @@ async function submit() {
       method: 'POST',
       body: { ...contact, answers }
     })
+    haptic('success')
     next()
   } catch (error: any) {
+    haptic('error')
     status.value = error?.data?.statusMessage || 'Your answers could not be sent. Please try again.'
   } finally {
     submitting.value = false

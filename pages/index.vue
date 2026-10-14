@@ -35,7 +35,7 @@
           <p class="dialog-copy">
             Vellum brings your will, digital assets, and final instructions together, so the people you trust know what matters and what to do next.
           </p>
-          <button class="button-primary" type="button" @click="dialogMode = 'quiz'">
+          <button class="button-primary" type="button" @click="startQuiz">
             Get started
           </button>
         </template>
@@ -54,12 +54,19 @@ const dialogMode = ref<DialogMode>('learn')
 const quiz = ref<{ reset: () => void, isDone: boolean } | null>(null)
 
 function openDialog(mode: DialogMode) {
+  haptic(mode === 'quiz' ? 'impact' : 'light')
   if (quiz.value?.isDone) quiz.value.reset()
   dialogMode.value = mode
   dialog.value?.showModal()
 }
 
+function startQuiz() {
+  haptic('impact')
+  dialogMode.value = 'quiz'
+}
+
 function closeDialog() {
+  haptic('light')
   dialog.value?.close()
 }
 
