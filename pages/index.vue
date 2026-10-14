@@ -2,7 +2,7 @@
   <main class="vellum-page">
     <section class="introduction" aria-labelledby="page-title">
       <h1 id="page-title">Vellum</h1>
-      <p class="eyebrow">Wills and digital legacy</p>
+      <p class="eyebrow chip glass">Wills and digital legacy</p>
       <p class="description">
         Make a will. Protect your digital assets. Leave clear instructions for the people you love. Keep your wishes and important details together in one thoughtful plan.
       </p>
@@ -10,8 +10,8 @@
         <button class="button-secondary" type="button" @click="openDialog('learn')">
           Learn more
         </button>
-        <button class="button-primary" type="button" @click="openDialog('request')">
-          Send a request
+        <button class="button-primary" type="button" @click="openDialog('quiz')">
+          Get started
         </button>
       </div>
     </section>
@@ -23,9 +23,11 @@
       />
     </section>
 
-    <dialog ref="dialog" class="request-dialog" aria-labelledby="dialog-title" @click="closeOnBackdrop">
+    <dialog ref="dialog" class="request-dialog" :class="{ wide: dialogMode === 'quiz' }" aria-labelledby="dialog-title" @click="closeOnBackdrop">
       <div class="dialog-content">
-        <button class="dialog-close" type="button" @click="closeDialog">Close</button>
+        <button class="dialog-close glass" type="button" aria-label="Close" @click="closeDialog">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+        </button>
 
         <template v-if="dialogMode === 'learn'">
           <p class="eyebrow">A clearer way to plan</p>
@@ -33,53 +35,27 @@
           <p class="dialog-copy">
             Vellum brings your will, digital assets, and final instructions together, so the people you trust know what matters and what to do next.
           </p>
-          <button class="button-primary" type="button" @click="dialogMode = 'request'">
-            Send a request
+          <button class="button-primary" type="button" @click="dialogMode = 'quiz'">
+            Get started
           </button>
         </template>
 
-        <form v-else class="request-form" @submit.prevent="submitRequest">
-          <p class="eyebrow">Get in touch</p>
-          <h2 id="dialog-title">Send a request</h2>
-          <label>
-            Name
-            <input v-model="request.name" autocomplete="name" maxlength="80" required />
-          </label>
-          <label>
-            Email
-            <input v-model="request.email" type="email" autocomplete="email" maxlength="254" required />
-          </label>
-          <label>
-            What would you like to know?
-            <textarea v-model="request.message" rows="4" maxlength="2000" required />
-          </label>
-          <label class="website-field" aria-hidden="true">
-            Website
-            <input v-model="request.website" tabindex="-1" autocomplete="off" />
-          </label>
-          <p class="form-note">Your name, email, and message will be sent to the Vellum team via Discord.</p>
-          <p v-if="status" class="form-status" role="status">{{ status }}</p>
-          <button class="button-primary" type="submit" :disabled="submitting">
-            {{ submitting ? 'Sending…' : 'Send request' }}
-          </button>
-        </form>
+        <WillQuiz v-else ref="quiz" @close="closeDialog" />
       </div>
     </dialog>
   </main>
 </template>
 
 <script setup lang="ts">
-type DialogMode = 'learn' | 'request'
+type DialogMode = 'learn' | 'quiz'
 
 const dialog = ref<HTMLDialogElement | null>(null)
 const dialogMode = ref<DialogMode>('learn')
-const submitting = ref(false)
-const status = ref('')
-const request = reactive({ name: '', email: '', message: '', website: '' })
+const quiz = ref<{ reset: () => void, isDone: boolean } | null>(null)
 
 function openDialog(mode: DialogMode) {
+  if (quiz.value?.isDone) quiz.value.reset()
   dialogMode.value = mode
-  status.value = ''
   dialog.value?.showModal()
 }
 
@@ -89,28 +65,6 @@ function closeDialog() {
 
 function closeOnBackdrop(event: MouseEvent) {
   if (event.target === dialog.value) closeDialog()
-}
-
-async function submitRequest() {
-  submitting.value = true
-  status.value = ''
-
-  try {
-    await $fetch('/api/contact', {
-      method: 'POST',
-      body: request
-    })
-    status.value = 'Thanks. Your request has been sent.'
-    request.name = ''
-    request.email = ''
-    request.message = ''
-    request.website = ''
-    window.setTimeout(closeDialog, 1200)
-  } catch {
-    status.value = 'Your request could not be sent. Please try again.'
-  } finally {
-    submitting.value = false
-  }
 }
 
 const requestUrl = useRequestURL()
@@ -161,30 +115,31 @@ useHead({
 
 <style scoped>
 .vellum-page {
-  --vellum-primary: #245aa6;
-  --vellum-primary-hover: #194781;
   position: relative;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: #f8f7f3;
-  color: #172d46;
+  overflow: hidden;
+  background:
+    radial-gradient(55% 45% at 12% 8%, rgb(36 70 194 / 13%), transparent 70%),
+    radial-gradient(45% 40% at 90% 14%, rgb(226 165 43 / 16%), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, rgb(36 70 194 / 8%), transparent 75%),
+    var(--vellum-paper);
+  color: var(--vellum-ink);
   font-family: 'DM Sans', sans-serif;
+}
+
+.chip {
+  display: inline-block;
+  margin: 10px 0 0;
+  padding: 7px 14px;
+  border-radius: 999px;
 }
 
 .introduction {
   width: min(740px, calc(100% - 48px));
   margin: auto auto clamp(24px, 5svh, 45px);
   text-align: center;
-}
-
-.eyebrow {
-  margin: 0 0 13px;
-  color: #317c7a;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 h1 {
@@ -197,8 +152,8 @@ h1 {
 
 .description {
   max-width: 650px;
-  margin: 25px auto 0;
-  color: #465564;
+  margin: 22px auto 0;
+  color: var(--vellum-muted);
   font-size: clamp(14px, 1.2vw, 15px);
   line-height: 1.75;
   text-wrap: pretty;
@@ -212,59 +167,46 @@ h1 {
   margin-top: 22px;
 }
 
-.button-primary,
-.button-secondary {
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid #172d46;
-  border-radius: 4px;
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-.button-primary {
-  border-color: var(--vellum-primary);
-  background: var(--vellum-primary);
-  color: white;
-}
-
-.button-primary:hover:not(:disabled) {
-  border-color: var(--vellum-primary-hover);
-  background: var(--vellum-primary-hover);
-}
-
-.button-primary:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
-.button-secondary {
-  background: transparent;
-  color: #172d46;
-}
-
-.button-secondary:hover {
-  background: rgb(23 45 70 / 7%);
-}
-
 .request-dialog {
   width: min(480px, calc(100% - 32px));
   max-height: min(90svh, 760px);
   margin: auto;
   padding: 0;
   overflow: auto;
-  border: 1px solid rgb(23 45 70 / 12%);
-  border-radius: 8px;
-  background: #f8f7f3;
-  color: #172d46;
-  box-shadow: 0 24px 80px rgb(23 45 70 / 20%);
+  overscroll-behavior: contain;
+  border: 1px solid var(--glass-stroke);
+  border-radius: 28px;
+  background: var(--glass-panel);
+  color: var(--vellum-ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 0 0 0.5px rgb(23 45 70 / 10%),
+    0 30px 80px -20px rgb(15 30 47 / 45%);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  backdrop-filter: blur(40px) saturate(190%);
 }
 
 .request-dialog::backdrop {
-  background: rgb(15 30 47 / 42%);
-  backdrop-filter: blur(3px);
+  background: rgb(23 45 70 / 14%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+}
+
+.request-dialog[open] {
+  animation: dialog-in 420ms var(--ease-spring) both;
+}
+
+.request-dialog[open]::backdrop {
+  animation: fade-in 300ms ease both;
+}
+
+.request-dialog.wide {
+  width: min(620px, calc(100% - 32px));
+  max-height: min(92svh, 860px);
+}
+
+.request-dialog.wide .dialog-content {
+  padding-top: 26px;
 }
 
 .dialog-content {
@@ -274,15 +216,96 @@ h1 {
 
 .dialog-close {
   position: absolute;
+  z-index: 2;
   top: 18px;
   right: 18px;
-  padding: 6px 0 6px 12px;
-  border: 0;
-  background: transparent;
-  color: #465564;
-  font: inherit;
-  font-size: 13px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--vellum-ink);
   cursor: pointer;
+  transition: background-color 200ms ease, transform 220ms var(--ease-spring);
+}
+
+.dialog-close:hover {
+  background: var(--glass-fill-hover);
+}
+
+.dialog-close:active {
+  transform: scale(0.92);
+}
+
+.dialog-close:focus-visible {
+  outline: 3px solid rgb(36 90 166 / 35%);
+  outline-offset: 2px;
+}
+
+.dialog-close svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+@media (max-width: 520px) {
+  .request-dialog.wide {
+    width: 100%;
+    max-width: 100%;
+    max-height: 94dvh;
+    margin: auto 0 0;
+    border-width: 1px 0 0;
+    border-radius: 30px 30px 0 0;
+  }
+
+  .request-dialog.wide .dialog-content {
+    padding: 22px 22px max(22px, env(safe-area-inset-bottom));
+  }
+
+  .request-dialog.wide .dialog-content::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 36px;
+    height: 5px;
+    border-radius: 999px;
+    background: rgb(23 45 70 / 18%);
+    transform: translateX(-50%);
+  }
+
+  .request-dialog.wide .dialog-close {
+    top: 16px;
+  }
+
+  .request-dialog.wide[open] {
+    animation-name: sheet-up;
+  }
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .request-dialog[open],
+  .request-dialog[open]::backdrop {
+    animation: none;
+  }
 }
 
 .dialog-content .eyebrow {
@@ -302,72 +325,6 @@ h1 {
   color: #465564;
   font-size: 15px;
   line-height: 1.65;
-}
-
-.request-form {
-  display: grid;
-  gap: 15px;
-}
-
-.request-form .eyebrow {
-  margin-bottom: -8px;
-}
-
-.request-form label {
-  display: grid;
-  gap: 6px;
-  color: #263d55;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.request-form input,
-.request-form textarea {
-  width: 100%;
-  border: 1px solid #cbd1d3;
-  border-radius: 4px;
-  background: #fff;
-  color: #172d46;
-  font: inherit;
-  font-size: 15px;
-}
-
-.request-form input {
-  min-height: 42px;
-  padding: 8px 10px;
-}
-
-.request-form textarea {
-  min-height: 100px;
-  padding: 10px;
-  resize: vertical;
-}
-
-.request-form input:focus,
-.request-form textarea:focus {
-  border-color: #317c7a;
-  outline: 2px solid rgb(49 124 122 / 20%);
-}
-
-.form-note,
-.form-status {
-  margin: 0;
-  color: #596775;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.form-status {
-  color: #23706e;
-}
-
-.website-field {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
 }
 
 .portrait-family {
@@ -400,7 +357,7 @@ h1 {
     margin: auto auto clamp(20px, 5svh, 35px);
   }
 
-  .eyebrow {
+  .chip {
     font-size: 10px;
   }
 
@@ -415,10 +372,10 @@ h1 {
     margin-top: 18px;
   }
 
-  .button-primary,
-  .button-secondary {
-    padding: 0 14px;
-    font-size: 13px;
+  .actions .button-primary,
+  .actions .button-secondary {
+    padding: 0 18px;
+    font-size: 13.5px;
   }
 
   .dialog-content {

@@ -61,3 +61,127 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Vellum glass theme — shared by the landing page and its dialogs */
+:root {
+  --vellum-ink: #172d46;
+  --vellum-muted: #5a6876;
+  --vellum-primary: #245aa6;
+  --vellum-primary-hover: #1d4c8f;
+  --vellum-blue: #2446c2;
+  --vellum-mustard: #e2a52b;
+  --vellum-paper: #f6f5f1;
+
+  --glass-fill: rgb(255 255 255 / 52%);
+  --glass-fill-hover: rgb(255 255 255 / 74%);
+  --glass-panel: linear-gradient(160deg, rgb(255 255 255 / 76%), rgb(255 255 255 / 48%));
+  --glass-stroke: rgb(255 255 255 / 70%);
+  --glass-blur: blur(30px) saturate(180%);
+  --glass-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 85%),
+    0 0 0 0.5px rgb(23 45 70 / 8%),
+    0 1px 2px rgb(23 45 70 / 6%),
+    0 10px 30px -12px rgb(23 45 70 / 22%);
+  --glass-shadow-raised:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 0 0 0.5px rgb(23 45 70 / 10%),
+    0 2px 6px rgb(23 45 70 / 6%),
+    0 18px 40px -14px rgb(23 45 70 / 28%);
+  --ease-spring: cubic-bezier(.32, .72, 0, 1);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-fill: rgb(255 255 255 / 88%);
+    --glass-panel: linear-gradient(160deg, #fff, #f6f5f1);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-fill: rgb(255 255 255 / 92%);
+    --glass-panel: linear-gradient(160deg, #fff, #f6f5f1);
+    --glass-blur: none;
+  }
+}
+
+.glass {
+  border: 1px solid var(--glass-stroke);
+  background: var(--glass-fill);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.eyebrow {
+  margin: 0 0 13px;
+  color: #317c7a;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.button-primary,
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: transform 220ms var(--ease-spring), box-shadow 220ms ease, background-color 220ms ease, filter 220ms ease;
+}
+
+.button-primary:active:not(:disabled),
+.button-secondary:active {
+  transform: scale(0.97);
+}
+
+.button-primary:focus-visible,
+.button-secondary:focus-visible {
+  outline: 3px solid rgb(36 90 166 / 35%);
+  outline-offset: 2px;
+}
+
+.button-primary {
+  background: linear-gradient(180deg, #3a73c8, var(--vellum-primary));
+  color: white;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 35%),
+    inset 0 -1px 0 rgb(0 0 0 / 10%),
+    0 8px 20px -8px rgb(36 90 166 / 65%);
+}
+
+.button-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 40%),
+    inset 0 -1px 0 rgb(0 0 0 / 10%),
+    0 12px 26px -8px rgb(36 90 166 / 70%);
+}
+
+.button-primary:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.button-secondary {
+  border-color: var(--glass-stroke);
+  background: var(--glass-fill);
+  color: var(--vellum-ink);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.button-secondary:hover {
+  background: var(--glass-fill-hover);
+}
